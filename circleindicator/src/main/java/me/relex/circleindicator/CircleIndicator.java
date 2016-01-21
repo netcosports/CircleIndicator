@@ -82,9 +82,9 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     }
 
     public void configureIndicator(int indicatorWidth, int indicatorHeight, int indicatorMargin,
-            @AnimatorRes int animatorId, @AnimatorRes int animatorReverseId,
-            @DrawableRes int indicatorBackgroundId,
-            @DrawableRes int indicatorUnselectedBackgroundId) {
+                                   @AnimatorRes int animatorId, @AnimatorRes int animatorReverseId,
+                                   @DrawableRes int indicatorBackgroundId,
+                                   @DrawableRes int indicatorUnselectedBackgroundId) {
 
         mIndicatorWidth = indicatorWidth;
         mIndicatorHeight = indicatorHeight;
@@ -132,7 +132,8 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     /**
      * @deprecated User ViewPager addOnPageChangeListener
      */
-    @Deprecated public void setOnPageChangeListener(OnPageChangeListener onPageChangeListener) {
+    @Deprecated
+    public void setOnPageChangeListener(OnPageChangeListener onPageChangeListener) {
         if (mViewpager == null) {
             throw new NullPointerException("can not find Viewpager , setViewPager first");
         }
@@ -144,7 +145,8 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
     }
 
-    @Override public void onPageSelected(int position) {
+    @Override
+    public void onPageSelected(int position) {
 
         if (mViewpager.getAdapter() == null || mViewpager.getAdapter().getCount() <= 0) {
             return;
@@ -166,7 +168,8 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
         mCurrentPosition = position;
     }
 
-    @Override public void onPageScrollStateChanged(int state) {
+    @Override
+    public void onPageScrollStateChanged(int state) {
     }
 
     private void createIndicators(ViewPager viewPager) {
@@ -188,20 +191,21 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     private void addIndicator(@DrawableRes int backgroundDrawableId, Animator animator) {
         if (animator.isRunning()) animator.end();
 
-        View Indicator = new View(getContext());
-        Indicator.setBackgroundResource(backgroundDrawableId);
-        addView(Indicator, mIndicatorWidth, mIndicatorHeight);
-        LayoutParams lp = (LayoutParams) Indicator.getLayoutParams();
+        Indicator indicator = new Indicator(getContext());
+        indicator.setBackgroundResource(backgroundDrawableId);
+        addView(indicator, mIndicatorWidth, mIndicatorHeight);
+        LayoutParams lp = (LayoutParams) indicator.getLayoutParams();
         lp.leftMargin = mIndicatorMargin;
         lp.rightMargin = mIndicatorMargin;
-        Indicator.setLayoutParams(lp);
+        indicator.setLayoutParams(lp);
 
-        animator.setTarget(Indicator);
+        animator.setTarget(indicator);
         animator.start();
     }
 
     private class ReverseInterpolator implements Interpolator {
-        @Override public float getInterpolation(float value) {
+        @Override
+        public float getInterpolation(float value) {
             return Math.abs(1.0f - value);
         }
     }
@@ -209,5 +213,19 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     public int dip2px(float dpValue) {
         final float scale = getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
+    }
+
+    private static class Indicator extends View {
+
+        public Indicator(Context context) {
+            super(context);
+        }
+
+        @Override
+        public boolean hasOverlappingRendering() {
+            // optimize rendering of translucent view
+            // https://plus.google.com/+CyrilMottier/posts/gAnib4nJyVT
+            return false;
+        }
     }
 }
