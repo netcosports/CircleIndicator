@@ -1,4 +1,4 @@
-package me.relex.circleindicatorsample;
+package com.netcosports.circleindicatorsample;
 
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;

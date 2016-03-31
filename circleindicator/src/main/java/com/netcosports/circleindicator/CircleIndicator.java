@@ -1,4 +1,4 @@
-package me.relex.circleindicator;
+package com.netcosports.circleindicator;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;

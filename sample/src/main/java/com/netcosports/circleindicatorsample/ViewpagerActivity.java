@@ -1,4 +1,4 @@
-package me.relex.circleindicatorsample;
+package com.netcosports.circleindicatorsample;
 
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
@@ -9,7 +9,7 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.Random;
 
-import me.relex.circleindicator.CircleIndicator;
+import com.netcosports.circleindicator.CircleIndicator;
 
 public class ViewpagerActivity extends AppCompatActivity implements View.OnClickListener {
 

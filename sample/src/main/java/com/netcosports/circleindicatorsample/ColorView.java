@@ -1,4 +1,4 @@
-package me.relex.circleindicatorsample;
+package com.netcosports.circleindicatorsample;
 
 import android.content.Context;
 import android.widget.FrameLayout;
