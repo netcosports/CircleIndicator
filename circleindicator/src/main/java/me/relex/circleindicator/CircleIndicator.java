@@ -250,15 +250,15 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     private void addIndicator(@DrawableRes int backgroundDrawableId, Animator animator) {
         if (animator.isRunning()) animator.end();
 
-        View Indicator = new View(getContext());
-        Indicator.setBackgroundResource(backgroundDrawableId);
-        addView(Indicator, mIndicatorWidth, mIndicatorHeight);
-        LayoutParams lp = (LayoutParams) Indicator.getLayoutParams();
+        Indicator indicator = new Indicator(getContext());
+        indicator.setBackgroundResource(backgroundDrawableId);
+        addView(indicator, mIndicatorWidth, mIndicatorHeight);
+        LayoutParams lp = (LayoutParams) indicator.getLayoutParams();
         lp.leftMargin = mIndicatorMargin;
         lp.rightMargin = mIndicatorMargin;
-        Indicator.setLayoutParams(lp);
+        indicator.setLayoutParams(lp);
 
-        animator.setTarget(Indicator);
+        animator.setTarget(indicator);
         animator.start();
     }
 
@@ -298,5 +298,19 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     public int dip2px(float dpValue) {
         final float scale = getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
+    }
+
+    private static class Indicator extends View {
+
+        public Indicator(Context context) {
+            super(context);
+        }
+
+        @Override
+        public boolean hasOverlappingRendering() {
+            // optimize rendering of translucent view
+            // https://plus.google.com/+CyrilMottier/posts/gAnib4nJyVT
+            return false;
+        }
     }
 }
