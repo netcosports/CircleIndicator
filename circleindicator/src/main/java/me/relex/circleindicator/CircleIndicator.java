@@ -2,8 +2,11 @@ package me.relex.circleindicator;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.LayoutTransition;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.database.DataSetObserver;
 import android.support.annotation.AnimatorRes;
 import android.support.annotation.DrawableRes;
 import android.support.v4.view.ViewPager;
@@ -23,12 +26,20 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
     private int mIndicatorWidth = -1;
     private int mIndicatorHeight = -1;
     private int mAnimatorResId = R.animator.scale_with_alpha;
+    private int mRemoveAnimatorResId = R.animator.default_remove;
+    private int mInsertAnimatorResId = R.animator.default_insert;
     private int mAnimatorReverseResId = 0;
     private int mIndicatorBackgroundResId = R.drawable.white_radius;
     private int mIndicatorUnselectedBackgroundResId = R.drawable.white_radius;
     private int mCurrentPosition = 0;
     private Animator mAnimationOut;
     private Animator mAnimationIn;
+    private Animator mAnimationRemove;
+    private Animator mAnimationInsert;
+    private View mIndicatorToRemove;
+
+    // data set observer used to catch add / remove event.
+    private DataSetObserver mInternalViewPagerDataSetObserver;
 
     public CircleIndicator(Context context) {
         super(context);
@@ -45,6 +56,26 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
         setGravity(Gravity.CENTER);
         handleTypedArray(context, attrs);
         checkIndicatorConfig(context);
+
+        // add layout transition to animate insertion and removal without item animator.
+        LayoutTransition layoutTransition = new LayoutTransition();
+        layoutTransition.setAnimator(LayoutTransition.APPEARING, null);
+        layoutTransition.setAnimator(LayoutTransition.DISAPPEARING, null);
+        setLayoutTransition(layoutTransition);
+
+        // view pager data set observer used to catch insertion and removal events.
+        mInternalViewPagerDataSetObserver = new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                int newPageCount = mViewpager.getAdapter().getCount();
+                if (newPageCount < getChildCount()) {
+                    onPageRemoved(newPageCount);
+                } else if (newPageCount > getChildCount()) {
+                    onPageInserted(newPageCount);
+                }
+            }
+        };
     }
 
     private void handleTypedArray(Context context, AttributeSet attrs) {
@@ -59,7 +90,6 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
                 typedArray.getDimensionPixelSize(R.styleable.CircleIndicator_ci_height, -1);
         mIndicatorMargin =
                 typedArray.getDimensionPixelSize(R.styleable.CircleIndicator_ci_margin, -1);
-
         mAnimatorResId = typedArray.getResourceId(R.styleable.CircleIndicator_ci_animator,
                 R.animator.scale_with_alpha);
         mAnimatorReverseResId =
@@ -70,6 +100,11 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
         mIndicatorUnselectedBackgroundResId =
                 typedArray.getResourceId(R.styleable.CircleIndicator_ci_drawable_unselected,
                         mIndicatorBackgroundResId);
+        mRemoveAnimatorResId = typedArray.getResourceId(R.styleable.CircleIndicator_ci_animator_remove,
+                mRemoveAnimatorResId);
+        mInsertAnimatorResId = typedArray.getResourceId(R.styleable.CircleIndicator_ci_animator_insert,
+                mInsertAnimatorResId);
+
         typedArray.recycle();
     }
 
@@ -78,11 +113,19 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
      */
     public void configureIndicator(int indicatorWidth, int indicatorHeight, int indicatorMargin) {
         configureIndicator(indicatorWidth, indicatorHeight, indicatorMargin,
-                R.animator.scale_with_alpha, 0, R.drawable.white_radius, R.drawable.white_radius);
+                R.animator.scale_with_alpha,
+                0,
+                R.animator.default_insert,
+                R.animator.default_remove,
+                R.drawable.white_radius,
+                R.drawable.white_radius);
     }
 
     public void configureIndicator(int indicatorWidth, int indicatorHeight, int indicatorMargin,
-                                   @AnimatorRes int animatorId, @AnimatorRes int animatorReverseId,
+                                   @AnimatorRes int animatorId,
+                                   @AnimatorRes int animatorReverseId,
+                                   @AnimatorRes int animatorInsertId,
+                                   @AnimatorRes int animatorRemoveId,
                                    @DrawableRes int indicatorBackgroundId,
                                    @DrawableRes int indicatorUnselectedBackgroundId) {
 
@@ -92,6 +135,8 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
 
         mAnimatorResId = animatorId;
         mAnimatorReverseResId = animatorReverseId;
+        mInsertAnimatorResId = animatorInsertId;
+        mRemoveAnimatorResId = animatorRemoveId;
         mIndicatorBackgroundResId = indicatorBackgroundId;
         mIndicatorUnselectedBackgroundResId = indicatorUnselectedBackgroundId;
 
@@ -107,6 +152,19 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
 
         mAnimatorResId = (mAnimatorResId == 0) ? R.animator.scale_with_alpha : mAnimatorResId;
         mAnimationOut = AnimatorInflater.loadAnimator(context, mAnimatorResId);
+
+        mAnimationRemove = AnimatorInflater.loadAnimator(context, mRemoveAnimatorResId);
+        mAnimationRemove.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                removeView(mIndicatorToRemove);
+                mIndicatorToRemove = null;
+            }
+        });
+
+        mAnimationInsert = AnimatorInflater.loadAnimator(context, mInsertAnimatorResId);
+
         if (mAnimatorReverseResId == 0) {
             mAnimationIn = AnimatorInflater.loadAnimator(context, mAnimatorResId);
             mAnimationIn.setInterpolator(new ReverseInterpolator());
@@ -127,6 +185,7 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
         mViewpager.removeOnPageChangeListener(this);
         mViewpager.addOnPageChangeListener(this);
         onPageSelected(mCurrentPosition);
+        mViewpager.getAdapter().registerDataSetObserver(mInternalViewPagerDataSetObserver);
     }
 
     /**
@@ -201,6 +260,32 @@ public class CircleIndicator extends LinearLayout implements OnPageChangeListene
 
         animator.setTarget(indicator);
         animator.start();
+    }
+
+    private void onPageRemoved(int newPageCount) {
+        if (mAnimationRemove.isRunning()) {
+            mAnimationRemove.end();
+            if (newPageCount == this.getChildCount()) {
+                return;
+            }
+        }
+
+        if (mCurrentPosition == newPageCount) {
+            mCurrentPosition--;
+        }
+
+        mIndicatorToRemove = getChildAt(getChildCount() - 1);
+        mAnimationRemove.setTarget(mIndicatorToRemove);
+        mAnimationRemove.start();
+    }
+
+    private void onPageInserted(int newPageCount) {
+        if (newPageCount == 1) {
+            mCurrentPosition = 0;
+            addIndicator(mIndicatorBackgroundResId, mAnimationOut);
+        } else {
+            addIndicator(mIndicatorUnselectedBackgroundResId, mAnimationInsert);
+        }
     }
 
     private class ReverseInterpolator implements Interpolator {
