@@ -1,16 +1,33 @@
 CircleIndicator
 ===============
-a lightweight viewpager indicator like in nexus 5 launcher 
+ A lightweight viewpager indicator like in nexus 5 launcher
+
+### All the credits goes to the [original repository](https://github.com/ongakuer/CircleIndicator)
+
+Since two MR affecting the performance of an app have been rejected this fork have moved to his own direction.
 
 ![CircleIndicator](/screenshot.gif)
 
 Gradle
 ------------
 
-**version 1.1.5 (```minSdkVersion="11"```)**
+Please consider using [the original library](https://github.com/ongakuer/CircleIndicator)
+
+**version 1.1.7 (```minSdkVersion="11"```)**
 ```groovy
+
+allprojects {
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://github.com/netcosports/maven/raw/master/'
+        }
+    }
+}
+
+
 dependencies {
-    compile 'me.relex:circleindicator:1.1.5@aar'
+    compile 'com.netcosports:circleindicator:1.1.7@aar'
 }
 ```
 
@@ -23,6 +40,12 @@ Usage
         android:layout_height="40dp"/>
 ```
 
+```java
+    CircleIndicator circleIndicator =  (CircleIndicator) findViewById(R.id.vp_indicator);
+    circleIndicator.setViewPager(viewPager);
+
+```
+
 #####Properties:
 
 * `app:ci_width`
@@ -32,11 +55,19 @@ Usage
 * `app:ci_drawable_unselected`
 * `app:ci_animator`
 * `app:ci_animator_reverse`
+* `app:ci_animator_insert`
+* `app:ci_animator_remove`
 
 
 
 ChangeLog
 --------
+
+##### 1.1.7  (2016-03-31)
+* indicate that indicator hasn't overlapping rendering in order to remove performance issues.
+
+##### 1.1.6  (2015-09-02)
+* support insertion and deletion
 
 ##### 1.1.5  (2015-06-28)
 * Fix bug ([#22](https://github.com/ongakuer/CircleIndicator/issues/22))
@@ -69,6 +100,7 @@ License
 --------
 ```
 Copyright (C) 2014 relex
+Copyright (C) 2015 Netcosports
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
