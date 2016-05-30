@@ -13,7 +13,7 @@ Gradle
 
 Please consider using [the original library](https://github.com/ongakuer/CircleIndicator)
 
-**version 1.1.7 (```minSdkVersion="11"```)**
+**version 1.1.8 (```minSdkVersion="11"```)**
 ```groovy
 
 allprojects {
@@ -27,7 +27,7 @@ allprojects {
 
 
 dependencies {
-    compile 'com.netcosports:circleindicator:1.1.7@aar'
+    compile 'com.netcosports:circleindicator:1.1.8@aar'
 }
 ```
 
@@ -35,7 +35,7 @@ dependencies {
 Usage
 --------
 ```xml
-	<me.relex.circleindicator.CircleIndicator
+	<com.netcosports.circleindicator.CircleIndicator
         android:layout_width="fill_parent"
         android:layout_height="40dp"/>
 ```
@@ -62,6 +62,9 @@ Usage
 
 ChangeLog
 --------
+
+##### 1.1.8  (2016-05-30)
+* support multiple insertion and deletion at the same time.
 
 ##### 1.1.7  (2016-03-31)
 * indicate that indicator hasn't overlapping rendering in order to remove performance issues.
